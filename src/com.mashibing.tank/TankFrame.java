@@ -5,17 +5,19 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class TankFrame extends Frame {
 
-    int x = 200, y = 200;
-
-    Dir dir = Dir.DOWN;
-
-    private static final int SPEED = 10;
+    Tank myTank = new Tank(200, 200, Dir.DOWN,this);
+    List<Bullet> bullets = new ArrayList<>();
+    Bullet b = new Bullet(300,300,Dir.DOWN,this);
+    static final int GAME_WIDTH = 800,GAME_HEIGHT = 600;
 
     public TankFrame() {
-        setSize(800, 600);
+        setSize(GAME_WIDTH, GAME_HEIGHT);
         setResizable(false);
         setTitle("tank war");
         setVisible(true);
@@ -30,30 +32,43 @@ public class TankFrame extends Frame {
         });
     }
 
+    Image offScreenImage = null;
+
+    @Override
+    public void update(Graphics g) {
+        if(offScreenImage==null){
+            offScreenImage = this.createImage(GAME_WIDTH,GAME_HEIGHT);
+        }
+        Graphics gOffScreen = offScreenImage.getGraphics();
+        Color c= gOffScreen.getColor();
+        gOffScreen.setColor(Color.BLACK);
+        gOffScreen.fillRect(0,0,GAME_WIDTH,GAME_HEIGHT);
+        gOffScreen.setColor(c);
+        paint(gOffScreen);
+        g.drawImage(offScreenImage,0,0,null);
+    }
+
     @Override
     public void paint(Graphics g) {
-        g.fillRect(x, y, 50, 50);
-        switch (dir) {
-            case LEFT:
-                x -= SPEED;
-                break;
-            case UP:
-                y -= SPEED;
-                break;
-            case RIGHT:
-                x += SPEED;
-                break;
-            case DOWN:
-                y += SPEED;
-                break;
-            default:
-                break;
+        Color c = g.getColor();
+        g.setColor(Color.white);
+        g.drawString("子弹的数量:"+bullets.size(),10,60);
+        g.setColor(c);
+        myTank.paint(g);
+        for (int i = 0; i < bullets.size(); i++) {
+            bullets.get(i).paint(g);
         }
-        //x+=10;
-        //y+=10;
+//        for(Iterator<Bullet> it = bullets.iterator(); it.hasNext();){
+//            Bullet b =it.next();
+//            if(!b.isLive()) it.remove();
+//        }
+//        for(Bullet b : bullets){
+//            b.paint(g);
+//        }
     }
 
     class MyKeyListener extends KeyAdapter {
+
         boolean bL = false;
         boolean bU = false;
         boolean bR = false;
@@ -74,6 +89,9 @@ public class TankFrame extends Frame {
                     break;
                 case KeyEvent.VK_DOWN:
                     bD = true;
+                    break;
+                case KeyEvent.VK_CONTROL:
+                    myTank.fire();
                     break;
                 default:
                     break;
@@ -104,10 +122,15 @@ public class TankFrame extends Frame {
         }
 
         private void setMainTankDir() {
-            if (bL) dir = Dir.LEFT;
-            if (bU) dir = Dir.UP;
-            if (bR) dir = Dir.RIGHT;
-            if (bD) dir = Dir.DOWN;
+            if (!bL && !bU && !bR && !bD) myTank.setMoving(false);
+            else {
+                myTank.setMoving(true);
+                if (bL) myTank.setDir(Dir.LEFT);
+                if (bU) myTank.setDir(Dir.UP);
+                if (bR) myTank.setDir(Dir.RIGHT);
+                if (bD) myTank.setDir(Dir.DOWN);
+            }
+
         }
     }
 
